@@ -1,0 +1,74 @@
+name: analysis-driven
+version: 1
+description: Business-analysis-first OpenSpec workflow with separate business and system requirements before delta specs and design.
+
+artifacts:
+  - id: proposal
+    generates: proposal.md
+    description: Initial change proposal describing the problem, intent, and impact.
+    template: proposal.md
+    instruction: |
+      Create a concise proposal. Explain why the change is needed and what outcome is expected.
+      Do not invent implementation details. Identify affected capabilities and stakeholders.
+    requires: []
+
+  - id: business_requirements
+    generates: business-requirements.md
+    description: Business requirements owned by the business-analyst subagent.
+    template: business-requirements.md
+    instruction: |
+      MUST delegate creation or update of this artifact to the `business-analyst` named subagent.
+      Preserve the template structure and stable requirement IDs.
+      Describe business intent, scope, roles, processes, rules, functional requirements,
+      acceptance criteria, assumptions, dependencies, risks, and open questions.
+      Do not include architecture or implementation decisions.
+    requires: [proposal]
+
+  - id: system_requirements
+    generates: system-requirements.md
+    description: System requirements owned by the system-analyst subagent.
+    template: system-requirements.md
+    instruction: |
+      MUST delegate creation or update of this artifact to the `system-analyst` named subagent.
+      Read business-requirements.md and relevant repository evidence first.
+      Define system boundaries, behavior, interfaces, data, integrations, errors, NFRs,
+      security, observability, compatibility, migration, constraints, and traceability.
+      Do not redefine business intent or write implementation code.
+    requires: [business_requirements]
+
+  - id: specs
+    generates: specs/**/*.md
+    description: OpenSpec requirement deltas derived from approved business and system requirements.
+    template: spec.md
+    instruction: |
+      Create one delta spec per affected capability.
+      Derive observable requirements and scenarios from business-requirements.md and
+      system-requirements.md. Use ADDED, MODIFIED, or REMOVED requirement sections.
+      Every requirement must have at least one concrete scenario using GIVEN/WHEN/THEN.
+      Keep implementation details in design.md, not in specs.
+    requires: [business_requirements, system_requirements]
+
+  - id: design
+    generates: design.md
+    description: Technical design and architectural decisions for implementing the approved requirements.
+    template: design.md
+    instruction: |
+      Explain how the approved requirements will be implemented in the current system.
+      Ground decisions in repository evidence. Include alternatives, trade-offs, data flows,
+      API changes, migration, security, observability, rollout, and rollback where relevant.
+      Reference requirement IDs and do not silently change them.
+    requires: [system_requirements, specs]
+
+  - id: tasks
+    generates: tasks.md
+    description: Traceable implementation and verification checklist.
+    template: tasks.md
+    instruction: |
+      Create an ordered checkbox checklist from the specs and design.
+      Each task must be independently verifiable and reference the requirements it implements.
+      Include implementation, tests, migration, documentation, telemetry, and rollout work.
+    requires: [specs, design]
+
+apply:
+  requires: [tasks]
+  tracks: tasks.md
