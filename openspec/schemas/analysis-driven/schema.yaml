@@ -1,6 +1,6 @@
 name: analysis-driven
 version: 1
-description: Business-analysis-first OpenSpec workflow with separate business and system requirements before delta specs and design.
+description: Business-analysis-first OpenSpec workflow with separate business, system, and QA artifacts before implementation tasks.
 
 artifacts:
   - id: proposal
@@ -59,6 +59,21 @@ artifacts:
       Reference requirement IDs and do not silently change them.
     requires: [system_requirements, specs]
 
+  - id: test_cases
+    generates: test-cases.md
+    description: Vendor-neutral test cases owned by the qa-engineer subagent and prepared for later TMS publication.
+    template: test-cases.md
+    instruction: |
+      MUST delegate creation or update of this artifact to the `qa-engineer` named subagent.
+      Read business-requirements.md, system-requirements.md, all delta specs, design.md,
+      and relevant existing tests first.
+      Create traceable positive, negative, boundary, integration, security, migration,
+      and non-functional test cases with stable IDs, reproducible data, concrete steps,
+      and observable expected results.
+      Preserve existing External IDs and keep canonical fields vendor-neutral.
+      Do not invent expected behavior or publish to a TMS as part of this artifact step.
+    requires: [specs, design]
+
   - id: tasks
     generates: tasks.md
     description: Traceable implementation and verification checklist.
@@ -66,8 +81,9 @@ artifacts:
     instruction: |
       Create an ordered checkbox checklist from the specs and design.
       Each task must be independently verifiable and reference the requirements it implements.
+      Use test-cases.md to identify required automated and manual verification work.
       Include implementation, tests, migration, documentation, telemetry, and rollout work.
-    requires: [specs, design]
+    requires: [specs, design, test_cases]
 
 apply:
   requires: [tasks]
