@@ -1,88 +1,119 @@
 name: analysis-driven
 version: 1
-description: Business-analysis-first OpenSpec workflow with separate business, system, and QA artifacts before implementation tasks.
+description: OpenSpec-процесс с предварительной бизнес-, системной и QA-аналитикой перед формированием задач реализации.
 
 artifacts:
   - id: proposal
     generates: proposal.md
-    description: Initial change proposal describing the problem, intent, and impact.
+    description: Краткое предложение изменения, за которое отвечает основной агент.
     template: proposal.md
     instruction: |
-      Create a concise proposal. Explain why the change is needed and what outcome is expected.
-      Do not invent implementation details. Identify affected capabilities and stakeholders.
+      Используй только явный ввод оператора и подтверждённые результаты /opsx:explore.
+      Если не определены проблема, ожидаемый результат или границы изменения,
+      не создавай файл: верни RESULT: NEEDS_INPUT и задай до пяти вопросов.
+      Не превращай предложение агента в подтверждённый факт.
+      Когда информации достаточно, покажи preview проблемы, результата, in/out scope,
+      существенного влияния, рисков и открытых вопросов.
+      Создай proposal.md только после явного подтверждения preview оператором.
+      Пиши кратко и не добавляй требования или детали реализации.
     requires: []
 
   - id: business_requirements
     generates: business-requirements.md
-    description: Business requirements owned by the business-analyst subagent.
+    description: Существенные бизнес-требования, за которые отвечает субагент business-analyst и которые согласует владелец бизнеса.
     template: business-requirements.md
     instruction: |
-      MUST delegate creation or update of this artifact to the `business-analyst` named subagent.
-      Preserve the template structure and stable requirement IDs.
-      Describe business intent, scope, roles, processes, rules, functional requirements,
-      acceptance criteria, assumptions, dependencies, risks, and open questions.
-      Do not include architecture or implementation decisions.
+      ОБЯЗАТЕЛЬНО вызови `business-analyst` сначала с MODE: DISCOVERY.
+      Если он вернул RESULT: NEEDS_INPUT, не создавай файл: передай вопросы оператору
+      и после ответов повтори DISCOVERY.
+      При READY_FOR_REVIEW покажи оператору preview BR-*, AC-*, допущений и BQ-*.
+      После явного согласования вызови `business-analyst` с MODE: WRITE и передай
+      подтверждённый preview и ответы.
+      Артефакт готов, когда каждый BR-* имеет источник, каждый AC-* ссылается на BR-*,
+      нет блокирующих BQ-*, а основной агент заполнил Approved и Approved by.
+      Не добавляй архитектурные решения и детали реализации.
     requires: [proposal]
 
   - id: system_requirements
     generates: system-requirements.md
-    description: System requirements owned by the system-analyst subagent.
+    description: Существенные системные требования, за которые отвечает субагент system-analyst.
     template: system-requirements.md
     instruction: |
-      MUST delegate creation or update of this artifact to the `system-analyst` named subagent.
-      Read business-requirements.md and relevant repository evidence first.
-      Define system boundaries, behavior, interfaces, data, integrations, errors, NFRs,
-      security, observability, compatibility, migration, constraints, and traceability.
-      Do not redefine business intent or write implementation code.
+      Начинай только после Approved business-requirements.md.
+      ОБЯЗАТЕЛЬНО вызови `system-analyst` сначала с MODE: DISCOVERY.
+      Если он вернул RESULT: NEEDS_INPUT, не создавай файл: передай вопросы оператору
+      и после ответов повтори DISCOVERY.
+      При READY_FOR_REVIEW покажи оператору трассировку BR/AC → SR/NFR, технические
+      доказательства, существенные контракты и SQ-*.
+      После явного подтверждения вызови `system-analyst` с MODE: WRITE и передай
+      подтверждённый preview и ответы.
+      Артефакт готов, когда каждый SR-* имеет источник и способ проверки, каждый NFR-*
+      измерим и имеет источник, а блокирующие SQ-* отсутствуют.
+      Не переопределяй бизнес-смысл и не добавляй решения из design.
     requires: [business_requirements]
 
   - id: specs
     generates: specs/**/*.md
-    description: OpenSpec requirement deltas derived from approved business and system requirements.
+    description: Delta-спецификации OpenSpec, за которые отвечает основной агент и которые выводятся из согласованного бизнес-смысла и системных требований.
     template: spec.md
     instruction: |
-      Create one delta spec per affected capability.
-      Derive observable requirements and scenarios from business-requirements.md and
-      system-requirements.md. Use ADDED, MODIFIED, or REMOVED requirement sections.
-      Every requirement must have at least one concrete scenario using GIVEN/WHEN/THEN.
-      Keep implementation details in design.md, not in specs.
+      Перед созданием specs выполни:
+      `node scripts/check-workflow.mjs <change-id> --stage requirements`.
+      Остановись, если проверка требований завершилась ошибкой.
+      Создай одну delta-спецификацию для каждой затронутой возможности.
+      Выводи наблюдаемые требования и сценарии из business-requirements.md и
+      system-requirements.md.
+      Используй разделы ADDED, MODIFIED, REMOVED или RENAMED.
+      Заголовки Requirement являются стабильными идентификаторами OpenSpec;
+      при переименовании используй RENAMED.
+      Каждое требование должно ссылаться на исходные ID и содержать хотя бы один
+      уникальный сценарий SC-* в формате GIVEN/WHEN/THEN.
+      Детали реализации храни в design.md, а не в specs.
     requires: [business_requirements, system_requirements]
 
   - id: design
     generates: design.md
-    description: Technical design and architectural decisions for implementing the approved requirements.
+    description: Краткий технический дизайн, за который отвечает основной агент.
     template: design.md
     instruction: |
-      Explain how the approved requirements will be implemented in the current system.
-      Ground decisions in repository evidence. Include alternatives, trade-offs, data flows,
-      API changes, migration, security, observability, rollout, and rollback where relevant.
-      Reference requirement IDs and do not silently change them.
+      Объясни, как будут реализованы требования, и обоснуй решение доказательствами
+      из репозитория.
+      Зафиксируй только существенные решения, компромиссы, изменения контрактов
+      и данных, аспекты надёжности и безопасности, выпуск и откат.
+      Ссылайся на ID SR/NFR и не меняй требования молча.
+      Для неприменимых разделов используй N/A вместо формального текста.
     requires: [system_requirements, specs]
 
   - id: test_cases
     generates: test-cases.md
-    description: Vendor-neutral test cases owned by the qa-engineer subagent and prepared for later TMS publication.
+    description: Компактные независимые от TMS тест-кейсы, за которые отвечает субагент qa-engineer.
     template: test-cases.md
     instruction: |
-      MUST delegate creation or update of this artifact to the `qa-engineer` named subagent.
-      Read business-requirements.md, system-requirements.md, all delta specs, design.md,
-      and relevant existing tests first.
-      Create traceable positive, negative, boundary, integration, security, migration,
-      and non-functional test cases with stable IDs, reproducible data, concrete steps,
-      and observable expected results.
-      Preserve existing External IDs and keep canonical fields vendor-neutral.
-      Do not invent expected behavior or publish to a TMS as part of this artifact step.
+      ОБЯЗАТЕЛЬНО вызови `qa-engineer` сначала с MODE: DISCOVERY.
+      Если он вернул RESULT: NEEDS_INPUT, не создавай файл: передай вопросы оператору
+      или владельцу исходного требования и после ответов повтори DISCOVERY.
+      При READY_FOR_REVIEW покажи preview покрытия, TC-* и QA-Q-*.
+      После явного подтверждения вызови `qa-engineer` с MODE: WRITE.
+      Артефакт готов, когда каждый TC-* имеет Refs, приоритет, воспроизводимые шаги
+      и наблюдаемые результаты, а блокирующие QA-Q-* отсутствуют.
+      Сохраняй существующие External ID и Automation Reference.
+      Не придумывай поведение, не храни результаты выполнения и не публикуй кейсы в TMS.
     requires: [specs, design]
 
   - id: tasks
     generates: tasks.md
-    description: Traceable implementation and verification checklist.
+    description: Трассируемый список задач реализации и проверки, за который отвечает основной агент.
     template: tasks.md
     instruction: |
-      Create an ordered checkbox checklist from the specs and design.
-      Each task must be independently verifiable and reference the requirements it implements.
-      Use test-cases.md to identify required automated and manual verification work.
-      Include implementation, tests, migration, documentation, telemetry, and rollout work.
+      Создай короткий упорядоченный список задач со стабильными идентификаторами TASK-*.
+      Не превращай нерешённые блокирующие вопросы в задачи реализации.
+      Каждая задача должна содержать Refs и Verify.
+      Добавляй Depends on или Done when только тогда, когда они существенно уточняют
+      сложную задачу.
+      Используй test-cases.md для определения необходимых автоматических и ручных проверок.
+      Включай только применимые работы по реализации, проверке, миграции, документации,
+      телеметрии и выпуска.
+      Не устанавливай Readiness: Ready без явного согласования.
     requires: [specs, design, test_cases]
 
 apply:
