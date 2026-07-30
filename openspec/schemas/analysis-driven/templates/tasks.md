@@ -1,10 +1,6 @@
 # План реализации: <название изменения>
 
 > **OpenSpec change:** `<change-id>`
->
-> **Readiness:** Draft
->
-> **Reviewed by:** —
 
 ## Реализация
 

@@ -34,7 +34,7 @@
 
 ## Трассировка
 
-| Business ID | System IDs | Статус |
+| BR/AC ID | System IDs | Статус |
 |---|---|---|
 | BR-001 | SR-001, NFR-001 | Covered / Gap / N/A |
 
