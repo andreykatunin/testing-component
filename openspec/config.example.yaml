@@ -32,9 +32,8 @@ context: |
 operations:
   apply:
     guidance:
-      - Перед реализацией выполнить `node scripts/check-workflow.mjs <change-id> --stage apply`.
-      - Остановиться при ненулевом exit code.
       - Не начинать реализацию при незакрытых блокирующих вопросах.
+      - Убедиться, что tasks.md имеет Readiness: Ready и заполненное поле Reviewed by.
       - При расхождении сначала обновить требования, затем downstream-артефакты и только потом код.
   archive:
     guidance:

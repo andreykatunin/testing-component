@@ -31,12 +31,12 @@
 3. Основной агент устанавливает `Approved` и `Approved by` только после явного
    согласования владельцем бизнеса или продукта.
 4. Только после этого `system-analyst` выполняет тот же цикл анализа и согласования.
-5. Перед specs выполни
-   `node scripts/check-workflow.mjs <change-id> --stage requirements`.
+5. Перед specs убедись, что первые три артефакта созданы, business requirements
+   согласованы, блокирующие `BQ-*`/`SQ-*` отсутствуют, а закрытые вопросы имеют ответ.
 6. После specs и design вызови `qa-engineer` для анализа, согласования и записи test cases.
 7. После test cases создай tasks и получи `Readiness: Ready`, `Reviewed by`.
-8. Перед apply выполни
-   `node scripts/check-workflow.mjs <change-id> --stage apply`.
+8. Перед apply убедись, что specs, design, test cases и tasks созданы, а tasks имеют
+   `Readiness: Ready` и заполненное поле `Reviewed by`.
 9. После apply выполни `/opsx:verify <change-id>`, затем sync/archive.
 
 ## Владение файлами

@@ -31,8 +31,6 @@ model: deepseek-v4-flash
 openspec/schemas/analysis-driven/     схема и семь шаблонов
 openspec/config.example.yaml          контекст, project rules и operations
 AGENTS.md                             правила диалога и оркестрации
-scripts/
-  check-workflow.mjs                  две минимальные проверки
 ```
 
 Правила разделены по ответственности:
@@ -144,11 +142,7 @@ Proposal, business requirements, system requirements и test cases создаю�
 `SQ-*`; числовые NFR без источника не создаются. Перед записью оператор видит
 трассировку `BR/AC → SR/NFR` и подтверждает предложенные системные требования.
 
-Перед specs запустите:
-
-```bash
-node scripts/check-workflow.mjs add-example-feature --stage requirements
-```
+Перед specs убедитесь, что выполнена контрольная точка требований, описанная ниже.
 
 ### 5. Specs и design
 
@@ -169,7 +163,7 @@ Specs описывают наблюдаемое поведение через Op
 
 Основной агент вызывает `qa-engineer` по тому же циклу анализа, согласования и записи.
 Каждый `TC-*` хранит приоритет, тип, `Refs`, шаги и ожидаемый результат. Поля
-автоматизации и `External ID` заполняются только когда они известны.
+автоматизации заполняются только когда они известны.
 
 ### 7. Tasks и apply
 
@@ -196,10 +190,6 @@ Specs описывают наблюдаемое поведение через Op
 
 Это вторая формальная контрольная точка со статусом в документе. Затем:
 
-```bash
-node scripts/check-workflow.mjs add-example-feature --stage apply
-```
-
 ```text
 /opsx:apply add-example-feature
 /opsx:verify add-example-feature
@@ -209,9 +199,9 @@ node scripts/check-workflow.mjs add-example-feature --stage apply
 
 `sync` можно пропустить, если delta specs синхронизируются во время archive.
 
-## Что проверяют gates
+## Контрольные точки
 
-`requirements` проверяет только:
+Перед specs основной агент и оператор проверяют:
 
 - наличие первых трёх артефактов;
 - согласование business requirements;
@@ -219,13 +209,13 @@ node scripts/check-workflow.mjs add-example-feature --stage apply
 - наличие ответа у вопросов со статусом `Resolved`;
 - отсутствие оставшихся значений из шаблона.
 
-`apply` дополнительно проверяет:
+Перед apply дополнительно проверяют:
 
 - наличие specs, design, test cases и tasks;
 - `Readiness: Ready` и `Reviewed by`.
 
-Checker намеренно не оценивает качество требований, покрытие, ссылки и формат сценариев:
-за это отвечают шаблоны, роли и review.
+Контрольные точки намеренно не заменяют review качества требований, покрытия, ссылок
+и сценариев: за это отвечают шаблоны, роли и оператор.
 
 ## Глоссарий ID
 
@@ -297,17 +287,10 @@ BR → AC → SR/NFR → OpenSpec Requirement + SC → TC → TASK
 | `Approved by` | Кто явно согласовал бизнес-требования. |
 | `Readiness` / `Reviewed by` | Готов ли план к apply и кто это подтвердил. |
 | `Automation Reference` | Ссылка на существующий автоматизированный тест. |
-| `External ID` | ID тест-кейса в TMS после первой публикации. |
 
 ID остаются стабильными: их не перенумеровывают, не переиспользуют и не меняют при
 перемещении элемента. Удалённый тест-кейс помечается `Deprecated`. Все связи между
 артефактами указываются через `Refs` или колонку источника.
-
-## Публикация тест-кейсов в TMS
-
-`test-cases.md` остаётся vendor-neutral источником истины. После выбора TMS для неё
-добавляется отдельный адаптер или import mapping. При первой публикации ID созданной
-записи сохраняется в `External ID`.
 
 ## Как не потеряться в начале
 
